@@ -7,6 +7,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\DaftarWmoidImport;
 use App\Imports\MonasInputNwpCompileImport;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use League\Csv\Reader;
 
 class WeatherDataController extends Controller
 {
@@ -71,6 +73,14 @@ class WeatherDataController extends Controller
 
     public function importMergedData()
     {
+        $cacheKey = 'merged_station_data';
+        $cacheTime = 60 * 60; // 1 hour
+
+        // Check if the data is already cached
+        if (Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey));
+        }
+
         // Fetch data from importData
         $stationData_path = public_path('data/daftar_wmoid.xlsx');
         $stationData_list = Excel::toCollection(new DaftarWmoidImport, $stationData_path)->first();
@@ -79,27 +89,29 @@ class WeatherDataController extends Controller
         $stationStatusData_list = Excel::toCollection(new MonasInputNwpCompileImport, $stationStatusData_path)->first();
         $stationStatusData_list = $stationStatusData_list->slice(1);
 
+        // Create a lookup array for station status data
+        $stationStatusLookup = [];
+        foreach ($stationStatusData_list as $status_row) {
+            $wmoid = $status_row[0];
+            if (!isset($stationStatusLookup[$wmoid])) {
+                $stationStatusLookup[$wmoid] = [];
+            }
+            $stationStatusLookup[$wmoid][] = [
+                'date' => $status_row[1] ?? '',
+                'prec_nwp' => $status_row[5] ?? '',
+                'prec_mos' => $status_row[6] ?? '',
+                'rh_nwp' => $status_row[7] ?? '',
+                'rh_mos' => $status_row[8] ?? '',
+                't_nwp' => $status_row[9] ?? '',
+                't_mos' => $status_row[10] ?? '',
+            ];
+        }
+
         $stationData_array = [];
         foreach ($stationData_list as $row) {
-            $stationStatusData_array = [];
-
-            foreach ($stationStatusData_list as $status_row) {
-                // dd($status_row[0], $row['wmoid']);
-                if ($status_row[0] == $row['wmoid']) {
-                    $stationStatusData_array[] = [
-                        'date' => $status_row[1] ?? '',
-                        'prec_nwp' => $status_row[5] ?? '',
-                        'prec_mos' => $status_row[6] ?? '',
-                        'rh_nwp' => $status_row[7] ?? '',
-                        'rh_mos' => $status_row[8] ?? '',
-                        't_nwp' => $status_row[9] ?? '',
-                        't_mos' => $status_row[10] ?? '',
-                    ];
-                }
-            }
-
+            $wmoid = $row['wmoid'] ?? '';
             $stationData_array[] = [
-                'wmoid' => $row['wmoid'] ?? '',
+                'wmoid' => $wmoid,
                 'namaUPT' => $row['nama_upt'] ?? '',
                 'provinsi' => $row['provinsi'] ?? '',
                 'kabKota' => $row['kabkota'] ?? '',
@@ -107,12 +119,12 @@ class WeatherDataController extends Controller
                 'bujur' => (float)str_replace(',', '.', $row['bujur']) ?? '',
                 'elevasi' => (float)str_replace(',', '.', $row['elevasi_m']) ?? '',
                 'catatan' => $row['catatan'] ?? '',
-                'status' => $stationStatusData_array
+                'status' => $stationStatusLookup[$wmoid] ?? []
             ];
-            // dd($stationData_array);
         }
 
-        // dd($stationData_array);
+        // Cache the processed data
+        Cache::put($cacheKey, $stationData_array, $cacheTime);
 
         return response()->json($stationData_array);
     }
