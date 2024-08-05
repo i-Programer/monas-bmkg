@@ -15,7 +15,6 @@ const TabComponent = ({ selectedStation }) => {
     const [temperatureMos, setTemperatureMos] = useState([]);
     const [statusDate, setStatusDate] = useState([]);
 
-    
     useEffect(() => {
         if (selectedStation) {
             setPrecipitationNwp(selectedStation.status.map(item => item.prec_nwp));
@@ -32,13 +31,12 @@ const TabComponent = ({ selectedStation }) => {
         const date = new Date(dateString);
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
         const formattedDate = date.toLocaleDateString(undefined, options);
-        // const formattedTime = date.toLocaleTimeString(undefined, { hour12: false });
         return `${formattedDate}`;
     };
 
     const createChartData = (nwpData, mosData, date) => {
         return nwpData.map((nwp, index) => ({
-            date: date,
+            date: date[index] || '',
             nwp,
             mos: mosData[index] || 0,
         }));
@@ -68,13 +66,13 @@ const TabComponent = ({ selectedStation }) => {
         { title: 'Relative Humidity Comparison', content: selectedStation ? (
             <ResponsiveContainer width="100%" height={400}>
                 <LineChart
-                    data={createChartData(relativeHumidityNwp, relativeHumidityMos, )}
+                    data={createChartData(relativeHumidityNwp, relativeHumidityMos, statusDate)}
                     margin={{
                         top: 5, right: 30, left: 20, bottom: 5,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -88,13 +86,13 @@ const TabComponent = ({ selectedStation }) => {
         { title: 'Temperature Comparison', content: selectedStation ? (
             <ResponsiveContainer width="100%" height={400}>
                 <LineChart
-                    data={createChartData(temperatureNwp, temperatureMos)}
+                    data={createChartData(temperatureNwp, temperatureMos, statusDate)}
                     margin={{
                         top: 5, right: 30, left: 20, bottom: 5,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
@@ -108,8 +106,8 @@ const TabComponent = ({ selectedStation }) => {
     ];
 
     return (
-        <div className="max-w-xl mx-auto mt-10">
-            <div className="flex space-x-4 border-b">
+        <div className="max-w-4xl mx-auto mt-10 p-4">
+            <div className="flex flex-wrap mb-4 border-b border-gray-200">
                 {tabs.map((tab, index) => (
                     <button
                         key={index}

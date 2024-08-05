@@ -4,11 +4,9 @@ import L from 'leaflet';
 import axios from 'axios';
 import 'tailwindcss/tailwind.css';
 import TabComponent from './TabComponent';
-import { FaFlask } from 'react-icons/fa';
+import { FaFlask, FaSpinner } from 'react-icons/fa';
 import ReactDOMServer from 'react-dom/server';
-import { FaSpinner } from 'react-icons/fa';
 import { DisplacementMap } from '..';
-
 
 // Create a custom icon using an HTML element and CSS classes
 const createCustomIcon = () => {
@@ -73,30 +71,30 @@ const MapIndonesia = () => {
                 Kabupaten/Kota: {station.kabKota}<br />
                 Elevasi: {station.elevasi} m<br />
                 Catatan: {station.catatan}<br />
-                <hr className="my-2" />
-                <table className="w-full text-left border-collapse">
+                <hr className="my-2 border-gray-300" />
+                <table className="w-full text-left border-collapse border border-gray-200">
                     <thead>
-                        <tr className="border-b-2">
-                            <th className="px-2 py-1"></th>
-                            <th className="px-2 py-1">Max</th>
-                            <th className="px-2 py-1">Mean</th>
-                            <th className="px-2 py-1">Min</th>
+                        <tr className="border-b border-gray-300">
+                            <th className="px-2 py-1 font-semibold">Metric</th>
+                            <th className="px-2 py-1 font-semibold">Max</th>
+                            <th className="px-2 py-1 font-semibold">Mean</th>
+                            <th className="px-2 py-1 font-semibold">Min</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr className="border-b">
+                        <tr className="border-b border-gray-300">
                             <td className="font-bold px-2 py-1">Precipitation</td>
                             <td className="px-2 py-1">{precipStats.max}</td>
                             <td className="px-2 py-1">{precipStats.mean}</td>
                             <td className="px-2 py-1">{precipStats.min}</td>
                         </tr>
-                        <tr className="border-b">
+                        <tr className="border-b border-gray-300">
                             <td className="font-bold px-2 py-1">Humidity</td>
                             <td className="px-2 py-1">{rhStats.max}</td>
                             <td className="px-2 py-1">{rhStats.mean}</td>
                             <td className="px-2 py-1">{rhStats.min}</td>
                         </tr>
-                        <tr className="border-b">
+                        <tr className="border-b border-gray-300">
                             <td className="font-bold px-2 py-1">Temperature</td>
                             <td className="px-2 py-1">{tempStats.max}</td>
                             <td className="px-2 py-1">{tempStats.mean}</td>
@@ -112,11 +110,11 @@ const MapIndonesia = () => {
     };
 
     return (
-        <div className="flex h-screen w-full">
-            <div className="w-[50%] p-4 bg-gray-100 overflow-y-auto">
+        <div className="flex flex-col lg:flex-row h-screen w-full">
+            <div className="lg:w-1/2 p-4 bg-gray-100 overflow-y-auto">
                 <TabComponent selectedStation={selectedStation} statuses={statuses} />
             </div>
-            <div className="w-full relative">
+            <div className="lg:w-1/2 w-full relative h-full">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-white z-50">
                         <FaSpinner className="animate-spin text-4xl text-blue-500" />
