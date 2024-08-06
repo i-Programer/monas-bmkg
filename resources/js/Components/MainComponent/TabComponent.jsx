@@ -4,9 +4,9 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
-const TabComponent = ({ selectedStation }) => {
+const TabComponent = ({ selectedStation, displacementMap, onTabChange }) => {
     const [activeTab, setActiveTab] = useState(0);
-    
+
     const [precipitationNwp, setPrecipitationNwp] = useState([]);
     const [precipitationMos, setPrecipitationMos] = useState([]);
     const [relativeHumidityNwp, setRelativeHumidityNwp] = useState([]);
@@ -26,7 +26,13 @@ const TabComponent = ({ selectedStation }) => {
             setStatusDate(selectedStation.status.map(item => formatDate(item.date)));
         }
     }, [selectedStation]);
-    
+
+    useEffect(() => {
+        if (onTabChange) {
+            onTabChange(activeTab);
+        }
+    }, [activeTab, onTabChange]);
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
@@ -122,6 +128,7 @@ const TabComponent = ({ selectedStation }) => {
                     </button>
                 ))}
             </div>
+            {displacementMap}
             <div className="p-4 mt-4 border rounded-lg bg-white shadow-md">
                 {tabs[activeTab].content}
             </div>

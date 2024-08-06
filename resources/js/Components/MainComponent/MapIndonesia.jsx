@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
 import 'tailwindcss/tailwind.css';
@@ -9,12 +9,12 @@ import ReactDOMServer from 'react-dom/server';
 import { DisplacementMap } from '..';
 
 // Create a custom icon using an HTML element and CSS classes
-const createCustomIcon = () => {
+const createCustomIcon = (size, color) => {
     return L.divIcon({
-        html: ReactDOMServer.renderToString(<FaFlask style={{ color: 'red', fontSize: '24px' }} />),
+        html: ReactDOMServer.renderToString(<FaFlask style={{ color, fontSize: `${size}px` }} />),
         className: '',
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size],
     });
 };
 
@@ -31,11 +31,37 @@ const calculateCombinedStats = (data, key1, key2) => {
     return { max, mean, min };
 };
 
+const useZoomLevel = () => {
+    const map = useMap();
+    const [zoomLevel, setZoomLevel] = useState(map.getZoom());
+
+    useEffect(() => {
+        const onZoom = () => {
+            setZoomLevel(map.getZoom());
+        };
+
+        map.on('zoom', onZoom);
+        return () => {
+            map.off('zoom', onZoom);
+        };
+    }, [map]);
+
+    return zoomLevel;
+};
+
+const getColorForValue = (value, min, max) => {
+    const red = 255;
+    const green = Math.round((value - min) / (max - min) * 255);
+    const blue = 0;
+    return `rgb(${red}, ${green}, ${blue})`;
+};
+
 const MapIndonesia = () => {
     const [stations, setStations] = useState([]);
     const [selectedStation, setSelectedStation] = useState(null);
     const [statuses, setStatuses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState(0);
 
     useEffect(() => {
         axios.get('/api/import-merged-data')
@@ -102,9 +128,6 @@ const MapIndonesia = () => {
                         </tr>
                     </tbody>
                 </table>
-                <div className="mt-4" style={{ height: "200px" }}>
-                    <DisplacementMap activeProvince={station.provinsi} />
-                </div>
             </div>
         );
     };
@@ -112,7 +135,12 @@ const MapIndonesia = () => {
     return (
         <div className="flex flex-col lg:flex-row h-screen w-full">
             <div className="lg:w-1/2 p-4 bg-gray-100 overflow-y-auto">
-                <TabComponent selectedStation={selectedStation} statuses={statuses} />
+                <TabComponent 
+                    selectedStation={selectedStation} 
+                    statuses={statuses} 
+                    displacementMap={selectedStation && <DisplacementMap activeProvince={selectedStation.provinsi} />}
+                    onTabChange={setActiveTab} 
+                />
             </div>
             <div className="lg:w-1/2 w-full relative h-full">
                 {loading ? (
@@ -122,31 +150,90 @@ const MapIndonesia = () => {
                 ) : (
                     <MapContainer 
                         center={[-2.5, 118]} 
-                        zoom={5} 
+                        zoom={5}
+                        minZoom={4} // Set the minimum zoom level
+                        maxZoom={8} // Set the maximum zoom level
                         style={{ height: "100%", width: "100%" }}
                     >
                         <TileLayer
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             attribution="&copy; OpenStreetMap contributors"
                         />
-                        {stations.map(station => (
-                            <Marker 
-                                key={station.wmoid} 
-                                position={[station.lintang, station.bujur]} 
-                                icon={createCustomIcon()}
-                                eventHandlers={{
-                                    click: () => handleMarkerClick(station),
-                                }}
-                            >
-                                <Popup>
-                                    {renderPopupContent(station)}
-                                </Popup>
-                            </Marker>
-                        ))}
+                        <DynamicMarkers 
+                            stations={stations} 
+                            handleMarkerClick={handleMarkerClick} 
+                            renderPopupContent={renderPopupContent} 
+                            activeTab={activeTab}
+                        />
                     </MapContainer>
                 )}
             </div>
         </div>
+    );
+};
+
+const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activeTab }) => {
+    const zoomLevel = useZoomLevel();
+    const minZoomToShowMarkers = 5; // Minimum zoom level to show markers
+
+    const getColorForStation = (station) => {
+        const stats = station.status;
+        const precipStats = calculateCombinedStats(stats, 'prec_nwp', 'prec_mos');
+        const rhStats = calculateCombinedStats(stats, 'rh_nwp', 'rh_mos');
+        const tempStats = calculateCombinedStats(stats, 't_nwp', 't_mos');
+
+        let value;
+        let min;
+        let max;
+
+        switch (activeTab) {
+            case 1:
+                value = rhStats.mean;
+                min = rhStats.min;
+                max = rhStats.max;
+                break;
+            case 2:
+                value = tempStats.mean;
+                min = tempStats.min;
+                max = tempStats.max;
+                break;
+            case 0:
+            default:
+                value = precipStats.mean;
+                min = precipStats.min;
+                max = precipStats.max;
+                break;
+        }
+
+        return getColorForValue(value, min, max);
+    };
+
+    return (
+        <>
+            {stations.map(station => {
+                if (zoomLevel < minZoomToShowMarkers) {
+                    return null;
+                }
+
+                const iconSize = Math.max(8, Math.min(24, zoomLevel * 3)); // Adjust icon size based on zoom level
+                const color = getColorForStation(station);
+                const icon = createCustomIcon(iconSize, color);
+                return (
+                    <Marker 
+                        key={station.wmoid} 
+                        position={[station.lintang, station.bujur]} 
+                        icon={icon}
+                        eventHandlers={{
+                            click: () => handleMarkerClick(station),
+                        }}
+                    >
+                        <Popup>
+                            {renderPopupContent(station)}
+                        </Popup>
+                    </Marker>
+                );
+            })}
+        </>
     );
 };
 
