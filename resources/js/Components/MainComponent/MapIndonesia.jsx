@@ -21,13 +21,13 @@ const createCustomIcon = (size, color) => {
 // Function to calculate max, mean, and min values from combined data
 const calculateCombinedStats = (data, key1, key2) => {
     if (!data || data.length === 0) return { max: 0, mean: 0, min: 0 };
-    
+
     const values = data.flatMap(item => [item[key1], item[key2]]).filter(value => value !== '');
     const sum = values.reduce((a, b) => a + parseFloat(b), 0);
     const mean = (sum / values.length).toFixed(2);
     const max = Math.max(...values).toFixed(2);
     const min = Math.min(...values).toFixed(2);
-    
+
     return { max, mean, min };
 };
 
@@ -175,6 +175,25 @@ const MapIndonesia = () => {
 const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activeTab }) => {
     const zoomLevel = useZoomLevel();
     const minZoomToShowMarkers = 5; // Minimum zoom level to show markers
+    const minDistance = 2.3; // Minimum distance (in degrees) to consider markers as clustered
+
+    // Function to check if a station is clustered
+    const isClustered = (station, allStations) => {
+        let nearbyCount = 0;
+
+        allStations.forEach(otherStation => {
+            const distance = Math.sqrt(
+                Math.pow(station.lintang - otherStation.lintang, 2) +
+                Math.pow(station.bujur - otherStation.bujur, 2)
+            );
+
+            if (distance < minDistance && station.wmoid !== otherStation.wmoid) {
+                nearbyCount++;
+            }
+        });
+
+        return nearbyCount > 3;
+    };
 
     const getColorForStation = (station) => {
         const stats = station.status;
@@ -211,13 +230,14 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
     return (
         <>
             {stations.map(station => {
-                if (zoomLevel < minZoomToShowMarkers) {
+                if (zoomLevel < minZoomToShowMarkers || (zoomLevel < 7 && isClustered(station, stations))) {
                     return null;
                 }
 
                 const iconSize = Math.max(8, Math.min(24, zoomLevel * 3)); // Adjust icon size based on zoom level
                 const color = getColorForStation(station);
                 const icon = createCustomIcon(iconSize, color);
+
                 return (
                     <Marker 
                         key={station.wmoid} 
