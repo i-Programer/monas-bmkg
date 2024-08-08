@@ -4,14 +4,14 @@ import L from 'leaflet';
 import axios from 'axios';
 import 'tailwindcss/tailwind.css';
 import TabComponent from './TabComponent';
-import { FaFlask, FaSpinner } from 'react-icons/fa';
+import { FaFlask, FaSpinner, FaCircle  } from 'react-icons/fa';
 import ReactDOMServer from 'react-dom/server';
 import { DisplacementMap } from '..';
 
 // Create a custom icon using an HTML element and CSS classes
 const createCustomIcon = (size, color) => {
     return L.divIcon({
-        html: ReactDOMServer.renderToString(<FaFlask style={{ color, fontSize: `${size}px` }} />),
+        html: ReactDOMServer.renderToString(<FaCircle style={{ color, fontSize: `${size}px` }} />),
         className: '',
         iconSize: [size, size],
         iconAnchor: [size / 2, size],
@@ -234,7 +234,7 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
                     return null;
                 }
 
-                const iconSize = Math.max(8, Math.min(24, zoomLevel * 3)); // Adjust icon size based on zoom level
+                const iconSize = Math.max(8, Math.min(10, zoomLevel * 8)); // Adjust icon size based on zoom level
                 const color = getColorForStation(station);
                 const icon = createCustomIcon(iconSize, color);
 
