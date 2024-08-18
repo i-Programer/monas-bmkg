@@ -86,7 +86,7 @@ const Map = ({ stadiamaps_api }) => {
                 data: windData,
                 minVelocity: 0,
                 maxVelocity: 10,
-                velocityScale: 0.025,
+                velocityScale: 0.015,
                 opacity: 1,
             });
 
@@ -116,7 +116,7 @@ const Map = ({ stadiamaps_api }) => {
                     
                 >
                     <GeoJSON data={choroplethData} style={geoJsonStyle} />
-                    {/* <VelocityLayer /> */}
+                    <VelocityLayer />
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url={`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${stadiamaps_api}`}
