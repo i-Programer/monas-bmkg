@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('homepage');
+Route::get('/windMap', [HomeController::class, 'windMap'])->name('windMap');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -17,9 +18,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('api')->group(function () {
-    Route::get('/import-data', [WeatherDataController::class, 'importData']);
-    Route::get('/import-data-details', [WeatherDataController::class, 'importDataDetails']);
-    Route::get('/import-merged-data', [WeatherDataController::class, 'importMergedData']);
+    Route::get('/import-detailed-data', [WeatherDataController::class, 'importDetailedData']);
 });
 
 

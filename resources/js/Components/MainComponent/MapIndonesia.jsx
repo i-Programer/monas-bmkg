@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import axios from 'axios';
-import 'tailwindcss/tailwind.css';
-import TabComponent from './TabComponent';
-import { FaFlask, FaSpinner, FaCircle  } from 'react-icons/fa';
-import ReactDOMServer from 'react-dom/server';
-import { DisplacementMap } from '..';
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, GeoJSON } from "react-leaflet";
+import L from "leaflet";
+import axios from "axios";
+import "tailwindcss/tailwind.css";
+import TabComponent from "./TabComponent";
+import { FaFlask, FaSpinner, FaCircle } from "react-icons/fa";
+import ReactDOMServer from "react-dom/server";
+import { DisplacementMap } from "..";
+import choroplethData from "@/data/choroplethData";
 
 // Create a custom icon using an HTML element and CSS classes
 const createCustomIcon = (size, color) => {
     return L.divIcon({
-        html: ReactDOMServer.renderToString(<FaCircle style={{ color, fontSize: `${size}px` }} />),
-        className: '',
+        html: ReactDOMServer.renderToString(
+            <FaCircle style={{ color, fontSize: `${size}px` }} />
+        ),
+        className: "",
         iconSize: [size, size],
         iconAnchor: [size / 2, size],
     });
@@ -22,7 +25,9 @@ const createCustomIcon = (size, color) => {
 const calculateCombinedStats = (data, key1, key2) => {
     if (!data || data.length === 0) return { max: 0, mean: 0, min: 0 };
 
-    const values = data.flatMap(item => [item[key1], item[key2]]).filter(value => value !== '');
+    const values = data
+        .flatMap((item) => [item[key1], item[key2]])
+        .filter((value) => value !== "");
     const sum = values.reduce((a, b) => a + parseFloat(b), 0);
     const mean = (sum / values.length).toFixed(2);
     const max = Math.max(...values).toFixed(2);
@@ -40,9 +45,9 @@ const useZoomLevel = () => {
             setZoomLevel(map.getZoom());
         };
 
-        map.on('zoom', onZoom);
+        map.on("zoom", onZoom);
         return () => {
-            map.off('zoom', onZoom);
+            map.off("zoom", onZoom);
         };
     }, [map]);
 
@@ -51,9 +56,38 @@ const useZoomLevel = () => {
 
 const getColorForValue = (value, min, max) => {
     const red = 255;
-    const green = Math.round((value - min) / (max - min) * 255);
+    const green = Math.round(((value - min) / (max - min)) * 255);
     const blue = 0;
     return `rgb(${red}, ${green}, ${blue})`;
+};
+
+// Style function for the choropleth GeoJSON layer
+const style = (feature, activeTab) => {
+    let value = 0;
+    console.log(activeTab);
+
+    switch (activeTab) {
+        case 1: // Humidity Tab
+            value = feature.properties.humidity || 0;
+            break;
+        case 2: // Temperature Tab
+            value = feature.properties.temperature || 0;
+            break;
+        case 0: // Precipitation Tab (default)
+        default:
+            value = feature.properties.precipitation || 0;
+            break;
+    }
+
+    // Adjust the color scale based on the value
+    return {
+        fillColor: getColorForValue(value, 0, 100), // Adjust min/max values as needed
+        weight: 2,
+        opacity: 1,
+        color: 'black',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
 };
 
 const MapIndonesia = () => {
@@ -64,18 +98,19 @@ const MapIndonesia = () => {
     const [activeTab, setActiveTab] = useState(0);
 
     useEffect(() => {
-        axios.get('/api/import-merged-data')
-            .then(response => {
+        axios
+            .get("/api/import-detailed-data")
+            .then((response) => {
                 const data = response.data;
                 setStations(data);
 
                 // Extract statuses from the stations data
-                const extractedStatuses = data.map(station => station.status);
+                const extractedStatuses = data.map((station) => station.status);
                 setStatuses(extractedStatuses);
                 setLoading(false);
             })
-            .catch(error => {
-                console.error('Error fetching data:', error);
+            .catch((error) => {
+                console.error("Error fetching data:", error);
                 setLoading(false);
             });
     }, []);
@@ -86,17 +121,25 @@ const MapIndonesia = () => {
 
     const renderPopupContent = (station) => {
         const stats = station.status;
-        const precipStats = calculateCombinedStats(stats, 'prec_nwp', 'prec_mos');
-        const rhStats = calculateCombinedStats(stats, 'rh_nwp', 'rh_mos');
-        const tempStats = calculateCombinedStats(stats, 't_nwp', 't_mos');
+        const precipStats = calculateCombinedStats(
+            stats,
+            "prec_nwp",
+            "prec_mos"
+        );
+        const rhStats = calculateCombinedStats(stats, "rh_nwp", "rh_mos");
+        const tempStats = calculateCombinedStats(stats, "t_nwp", "t_mos");
 
         return (
             <div>
-                <strong>{station.namaUPT}</strong><br />
-                Provinsi: {station.provinsi}<br />
-                Kabupaten/Kota: {station.kabKota}<br />
+                <strong>{station.namaUPT}</strong>
+                <br />
+                Provinsi: {station.provinsi}
+                <br />
+                Kabupaten/Kota: {station.kabKota}
+                <br />
                 Elevasi: {station.elevasi} m<br />
-                Catatan: {station.catatan}<br />
+                Catatan: {station.catatan}
+                <br />
                 <hr className="my-2 border-gray-300" />
                 <table className="w-full text-left border-collapse border border-gray-200">
                     <thead>
@@ -109,7 +152,9 @@ const MapIndonesia = () => {
                     </thead>
                     <tbody>
                         <tr className="border-b border-gray-300">
-                            <td className="font-bold px-2 py-1">Precipitation</td>
+                            <td className="font-bold px-2 py-1">
+                                Precipitation
+                            </td>
                             <td className="px-2 py-1">{precipStats.max}</td>
                             <td className="px-2 py-1">{precipStats.mean}</td>
                             <td className="px-2 py-1">{precipStats.min}</td>
@@ -134,22 +179,28 @@ const MapIndonesia = () => {
 
     return (
         <div className="flex flex-col lg:flex-row h-screen w-full">
-            <div className="lg:w-1/2 p-4 bg-gray-100 overflow-y-auto">
-                <TabComponent 
-                    selectedStation={selectedStation} 
-                    statuses={statuses} 
-                    displacementMap={selectedStation && <DisplacementMap activeProvince={selectedStation.provinsi} />}
-                    onTabChange={setActiveTab} 
+            {/* <div className="lg:w-1/2 p-4 bg-gray-100 overflow-y-auto">
+                <TabComponent
+                    selectedStation={selectedStation}
+                    statuses={statuses}
+                    displacementMap={
+                        selectedStation && (
+                            <DisplacementMap
+                                activeProvince={selectedStation.provinsi}
+                            />
+                        )
+                    }
+                    onTabChange={setActiveTab}
                 />
-            </div>
+            </div> */}
             <div className="lg:w-1/2 w-full relative h-full">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-white z-50">
                         <FaSpinner className="animate-spin text-4xl text-blue-500" />
                     </div>
                 ) : (
-                    <MapContainer 
-                        center={[-2.5, 118]} 
+                    <MapContainer
+                        center={[-2.5, 118]}
                         zoom={5}
                         minZoom={4} // Set the minimum zoom level
                         maxZoom={8} // Set the maximum zoom level
@@ -159,10 +210,11 @@ const MapIndonesia = () => {
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             attribution="&copy; OpenStreetMap contributors"
                         />
-                        <DynamicMarkers 
-                            stations={stations} 
-                            handleMarkerClick={handleMarkerClick} 
-                            renderPopupContent={renderPopupContent} 
+                        <GeoJSON data={choroplethData} style={style} />
+                        <DynamicMarkers
+                            stations={stations}
+                            handleMarkerClick={handleMarkerClick}
+                            renderPopupContent={renderPopupContent}
                             activeTab={activeTab}
                         />
                     </MapContainer>
@@ -172,7 +224,12 @@ const MapIndonesia = () => {
     );
 };
 
-const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activeTab }) => {
+const DynamicMarkers = ({
+    stations,
+    handleMarkerClick,
+    renderPopupContent,
+    activeTab,
+}) => {
     const zoomLevel = useZoomLevel();
     const minZoomToShowMarkers = 5; // Minimum zoom level to show markers
     const minDistance = 2.3; // Minimum distance (in degrees) to consider markers as clustered
@@ -181,13 +238,16 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
     const isClustered = (station, allStations) => {
         let nearbyCount = 0;
 
-        allStations.forEach(otherStation => {
+        allStations.forEach((otherStation) => {
             const distance = Math.sqrt(
                 Math.pow(station.lintang - otherStation.lintang, 2) +
-                Math.pow(station.bujur - otherStation.bujur, 2)
+                    Math.pow(station.bujur - otherStation.bujur, 2)
             );
 
-            if (distance < minDistance && station.wmoid !== otherStation.wmoid) {
+            if (
+                distance < minDistance &&
+                station.wmoid !== otherStation.wmoid
+            ) {
                 nearbyCount++;
             }
         });
@@ -197,9 +257,13 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
 
     const getColorForStation = (station) => {
         const stats = station.status;
-        const precipStats = calculateCombinedStats(stats, 'prec_nwp', 'prec_mos');
-        const rhStats = calculateCombinedStats(stats, 'rh_nwp', 'rh_mos');
-        const tempStats = calculateCombinedStats(stats, 't_nwp', 't_mos');
+        const precipStats = calculateCombinedStats(
+            stats,
+            "prec_nwp",
+            "prec_mos"
+        );
+        const rhStats = calculateCombinedStats(stats, "rh_nwp", "rh_mos");
+        const tempStats = calculateCombinedStats(stats, "t_nwp", "t_mos");
 
         let value;
         let min;
@@ -229,8 +293,11 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
 
     return (
         <>
-            {stations.map(station => {
-                if (zoomLevel < minZoomToShowMarkers || (zoomLevel < 7 && isClustered(station, stations))) {
+            {stations.map((station) => {
+                if (
+                    zoomLevel < minZoomToShowMarkers ||
+                    (zoomLevel < 7 && isClustered(station, stations))
+                ) {
                     return null;
                 }
 
@@ -239,17 +306,15 @@ const DynamicMarkers = ({ stations, handleMarkerClick, renderPopupContent, activ
                 const icon = createCustomIcon(iconSize, color);
 
                 return (
-                    <Marker 
-                        key={station.wmoid} 
-                        position={[station.lintang, station.bujur]} 
+                    <Marker
+                        key={station.wmoid}
+                        position={[station.lintang, station.bujur]}
                         icon={icon}
                         eventHandlers={{
                             click: () => handleMarkerClick(station),
                         }}
                     >
-                        <Popup>
-                            {renderPopupContent(station)}
-                        </Popup>
+                        <Popup>{renderPopupContent(station)}</Popup>
                     </Marker>
                 );
             })}

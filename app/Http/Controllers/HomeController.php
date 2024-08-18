@@ -16,8 +16,12 @@ class HomeController extends Controller
         $this->csvFilePath = public_path('data/MONAS-input_nwp_compile.csv');
     }
     public function index(){
-        return Inertia::render('Homepage/Home');
-
-        
+        $openweather_api = env('REACT_APP_OPENWEATHER_API_KEY');
+        $stadiamaps_api = env('REACT_APP_STADIAMAPS_API_KEY');
+        return Inertia::render('Homepage/Home', compact('openweather_api', 'stadiamaps_api'));
+    }
+    
+    public function windMap(){
+        return Inertia::render('Homepage/WindMap');
     }
 }
