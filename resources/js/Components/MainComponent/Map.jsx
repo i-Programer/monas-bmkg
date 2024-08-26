@@ -12,7 +12,7 @@ import L from "leaflet"; // Import Leaflet for bounds
 import "leaflet-velocity";
 import choroplethData from "@/data/choroplethData";
 import windData from "@/data/windData";
-import LayerMap from "./LayerMap";
+import { LayerMap, SearchBar } from "..";
 import StationInfo from "./Station/StationInfo";
 import StationDetails from "./Station/StationDetails";
 
@@ -27,7 +27,7 @@ const Map = ({ stadiamaps_api }) => {
     const [loading, setLoading] = useState(false);
     const [color, setColor] = useState("red");
     const [selectedStation, setSelectedStation] = useState(null);
-    const [selectedMarker, setSelectedMarker] = useState(0)
+    const [selectedMarker, setSelectedMarker] = useState(null)
 
     const [activeTab, setActiveTab] = useState(1);
 
@@ -49,14 +49,17 @@ const Map = ({ stadiamaps_api }) => {
             });
     }, []);
 
-    const geoJsonStyle = (feature) => {
-        if (activeTab == 1) {
+    useEffect(() => {
+        if (activeTab === 1) {
             setColor("green");
-        } else if (activeTab == 2) {
+        } else if (activeTab === 2) {
             setColor("blue");
         } else {
             setColor("red");
         }
+    }, [activeTab]);
+
+    const geoJsonStyle = (feature) => {
         return {
             fillColor: color, // Example based on data
             weight: 1, // Thinner border (default is 2)
@@ -69,41 +72,31 @@ const Map = ({ stadiamaps_api }) => {
 
     const VelocityLayer = () => {
         const map = useMap();
-
+    
         useEffect(() => {
+            if (!map) return; // Ensure map is initialized
+    
             const velocityLayer = L.velocityLayer({
-                displayValues: true,
-                displayOptions: {
-                    velocityType: "Global Wind",
-                    position: "bottomleft",
-                    emptyString: "No velocity data",
-                    angleConvention: "bearingCW",
-                    showCardinal: false,
-                    speedUnit: "ms",
-                    directionString: "Direction",
-                    speedString: "Speed",
-                },
-                data: windData,
-                minVelocity: 0,
-                maxVelocity: 10,
-                velocityScale: 0.015,
-                opacity: 1,
+                // your options here
             });
-
-            velocityLayer.addTo(map);
-
+    
+            map.whenReady(() => {
+                velocityLayer.addTo(map);
+            });
+    
             return () => {
                 map.removeLayer(velocityLayer);
             };
         }, [map]);
-
+    
         return null;
     };
 
     return (
         <>
             {/* <div className="flex flex-row justify-between items-stretch"> */}
-                <LayerMap activeTab={activeTab} setActiveTab={setActiveTab} />
+                {/* <SearchBar /> */}
+                <LayerMap activeTab={activeTab} setActiveTab={setActiveTab} selectedStation={selectedStation} />
                 <MapContainer
                     center={[-2.5, 118]} // Center the map on Indonesia
                     zoom={5} // Set an initial zoom level
@@ -113,6 +106,7 @@ const Map = ({ stadiamaps_api }) => {
                     style={{ height: "100vh", width: "100%" }} // Full-screen map
                     // maxBounds={indonesiaBounds} // Restrict the map to Indonesia bounds
                     // maxBoundsViscosity={1.0} // Prevent dragging outside the bounds
+                    zoomControl={false}
                     
                 >
                     <GeoJSON data={choroplethData} style={geoJsonStyle} />

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Marker, Popup, Tooltip } from "react-leaflet";
 import ReactDOMServer from "react-dom/server";
 import { FaCircle } from "react-icons/fa";
+import { RadarAnimation } from "@/Components";
 
 const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedMarker, markerId }) => {
     const customIcon =  L.divIcon({
@@ -13,13 +14,10 @@ const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedM
         // iconAnchor: [12, 24], // Anchor the icon at the bottom center
     });
 
-    const customIconSelected =  L.divIcon({
-        html: ReactDOMServer.renderToString(
-            <FaCircle style={{ color: "black", fontSize: "12px" }} />
-        ),
-        className: "", // You can add custom CSS classes here
-        iconSize: [1, 1], // Set the size of your icon [width, height]
-        // iconAnchor: [12, 24], // Anchor the icon at the bottom center
+    const customIconSelected = L.divIcon({
+        html: ReactDOMServer.renderToString(<RadarAnimation />), // Use the RadarAnimation component
+        className: '',
+        iconSize: [1, 1],
     });
 
     const calculateCombinedStats = (data, key1, key2) => {

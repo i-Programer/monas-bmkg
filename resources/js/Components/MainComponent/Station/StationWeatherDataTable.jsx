@@ -98,11 +98,11 @@ const StationWeatherDataTable = ({
         );
     };
 
-    console.log(timeCheckpoint);
+    // console.log(timeCheckpoint);
 
     return (
         <>
-            <div className="overflow-x-auto sm:max-w-[50%] w-full">
+            <div className="overflow-x-auto sm:max-w-[70%] w-full">
                 <table className="min-w-full text-left text-sm">
                     <thead>
                         <tr className="text-center">
