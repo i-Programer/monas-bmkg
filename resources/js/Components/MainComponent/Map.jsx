@@ -72,23 +72,34 @@ const Map = ({ stadiamaps_api }) => {
 
     const VelocityLayer = () => {
         const map = useMap();
-    
+
         useEffect(() => {
-            if (!map) return; // Ensure map is initialized
-    
             const velocityLayer = L.velocityLayer({
-                // your options here
+                displayValues: true,
+                displayOptions: {
+                    velocityType: "Global Wind",
+                    position: "bottomleft",
+                    emptyString: "No velocity data",
+                    angleConvention: "bearingCW",
+                    showCardinal: false,
+                    speedUnit: "ms",
+                    directionString: "Direction",
+                    speedString: "Speed",
+                },
+                data: windData,
+                minVelocity: 0,
+                maxVelocity: 10,
+                velocityScale: 0.015,
+                opacity: 1,
             });
-    
-            map.whenReady(() => {
-                velocityLayer.addTo(map);
-            });
-    
+
+            velocityLayer.addTo(map);
+
             return () => {
                 map.removeLayer(velocityLayer);
             };
         }, [map]);
-    
+
         return null;
     };
 
