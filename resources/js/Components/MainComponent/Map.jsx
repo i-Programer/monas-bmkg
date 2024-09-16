@@ -12,7 +12,7 @@ import L from "leaflet"; // Import Leaflet for bounds
 import "leaflet-velocity";
 import choroplethData from "@/data/choroplethData";
 import windData from "@/data/windData";
-import { LayerMap, SearchBar } from "..";
+import { LayerMap, Legend, SearchBar } from "..";
 import StationInfo from "./Station/StationInfo";
 import StationDetails from "./Station/StationDetails";
 
@@ -29,7 +29,49 @@ const Map = ({ stadiamaps_api }) => {
     const [selectedStation, setSelectedStation] = useState(null);
     const [selectedMarker, setSelectedMarker] = useState(null);
 
+    const [minValue, setMinValue] = useState(0);
+    const [maxValue, setMaxValue] = useState(100);
+
     const [activeTab, setActiveTab] = useState(1);
+
+    const calculateStats = (values) => {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const mean =
+            values.reduce((sum, value) => sum + value, 0) / values.length;
+        return { min, max, mean };
+    };
+
+    // Step 1: Extract and combine all values from all stations
+    const allTValues = station_data
+        .map((station) => station.status.map((s) => [s.t_nwp, s.t_mos]))
+        .flat(2); // Flatten the nested arrays into one array of temperature values
+
+    const allRHValues = station_data
+        .map((station) => station.status.map((s) => [s.rh_nwp, s.rh_mos]))
+        .flat(2); // Flatten the nested arrays into one array of humidity values
+
+    const allPrecValues = station_data
+        .map((station) => station.status.map((s) => [s.prec_nwp, s.prec_mos]))
+        .flat(2); // Flatten the nested arrays into one array of precipitation values
+
+    // Step 2: Calculate global min, max, and mean for temperature, humidity, and precipitation
+    const globalTStats = calculateStats(allTValues);
+    const globalRHStats = calculateStats(allRHValues);
+    const globalPrecStats = calculateStats(allPrecValues);
+
+    console.log("Global Temperature Stats:", globalTStats);
+    console.log("Global Humidity Stats:", globalRHStats);
+    console.log("Global Precipitation Stats:", globalPrecStats);
+
+    let selectedStats;
+    if (activeTab === 3) {
+        selectedStats = globalTStats;
+    } else if (activeTab === 2) {
+        selectedStats = globalRHStats;
+    } else if (activeTab === 1) {
+        selectedStats = globalPrecStats;
+    }
 
     useEffect(() => {
         axios
@@ -161,10 +203,10 @@ const Map = ({ stadiamaps_api }) => {
                         // Normalize the value between 0 and 1
                         const normalizedValue = (value - min) / (max - min);
 
-                        // Interpolating between light blue (low precip) and dark blue (high precip)
-                        const r = 0; // Red is 0 for precipitation
-                        const g = Math.floor(255 * (1 - normalizedValue)); // Green decreases with increasing precipitation
-                        const b = Math.floor(255 * normalizedValue); // Blue increases with increasing precipitation
+                        // Interpolating between light green (low precip) and dark green (high precip)
+                        const r = Math.floor(144 * (1 - normalizedValue)); // Green increases as value increases
+                        const g = Math.floor(238 * (1 - normalizedValue)); // Light green to dark green
+                        const b = Math.floor(144 * normalizedValue); // Less blue component
 
                         return `rgb(${r},${g},${b})`;
                     };
@@ -241,6 +283,13 @@ const Map = ({ stadiamaps_api }) => {
                 })}
 
                 {/* You can add markers or other features here */}
+
+                <Legend
+                    min={selectedStats.min}
+                    max={selectedStats.max}
+                    mean={selectedStats.mean}
+                    activeTab={activeTab}
+                />
             </MapContainer>
             <StationDetails
                 setSelectedStation={setSelectedStation}

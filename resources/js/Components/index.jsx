@@ -11,3 +11,5 @@ export { default as RadarAnimation } from '@/Components/MainComponent/Utility/Ra
 export { default as LayerMap} from '@/Components/MainComponent/Utility/LayerMap';
 export { default as SearchBar } from '@/Components/MainComponent/Utility/SearchBar';
 export { default as LoadingSpinner } from '@/Components/MainComponent/Utility/LoadingSpinner';
+
+export { default as Legend } from '@/Components/MainComponent/Utility/Legend';
