@@ -10,3 +10,4 @@ export { default as DisplacementMap } from '@/Components/MainComponent/Displacem
 export { default as RadarAnimation } from '@/Components/MainComponent/Utility/RadarAnimation';
 export { default as LayerMap} from '@/Components/MainComponent/Utility/LayerMap';
 export { default as SearchBar } from '@/Components/MainComponent/Utility/SearchBar';
+export { default as LoadingSpinner } from '@/Components/MainComponent/Utility/LoadingSpinner';

@@ -72,5 +72,18 @@ body{
   }
 }
   
-  
-  
+/* Add this to your global CSS file or in your Tailwind config */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+
+.custom-station-info-tooltip{
+  margin-right: 100px !important;
+  background-color: black !important;
+}

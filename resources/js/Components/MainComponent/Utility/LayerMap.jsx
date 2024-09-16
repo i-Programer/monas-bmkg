@@ -18,7 +18,7 @@ const LayerMap = ({ activeTab, setActiveTab, selectedStation }) => {
                         onClick={() => setActiveTab(2)}
                     >
                         <WiHumidity className="text-lg font-bold"/>
-                        <span>Relative Humidity</span>
+                        <span>Humidity</span>
                     </button>
                     <button
                         className="rounded-md  bg-red-700 p-1 flex flex-row justify-between items-center"

@@ -143,21 +143,15 @@ const StationsWeatherDataGraph = ({
                             <Line
                                 type="monotone"
                                 dataKey="nwp"
-                                name="prec_nwp"
+                                name="nwp"
                                 stroke="#8884d8"
                                 activeDot={{ r: 8 }}
                             />
                             <Line
                                 type="monotone"
                                 dataKey="mos"
-                                name="prec_mos"
+                                name="mos"
                                 stroke="#82ca9d"
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="comparison"
-                                name="Difference (NWP-MOS)"
-                                stroke="#ff7300"
                             />
                         </LineChart>
                     </ResponsiveContainer>

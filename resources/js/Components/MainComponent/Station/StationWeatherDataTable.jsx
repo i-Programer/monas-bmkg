@@ -1,4 +1,12 @@
 import React, { useEffect, useState } from "react";
+import {
+    FaSun,
+    FaCloudRain,
+    FaSnowflake,
+    FaTint,
+    FaThermometerHalf,
+} from "react-icons/fa";
+
 
 const StationWeatherDataTable = ({
     selectedStation,
@@ -24,6 +32,24 @@ const StationWeatherDataTable = ({
         const date = new Date(dateString);
         const options = { hour: "2-digit", minute: "2-digit" };
         return date.toLocaleTimeString(undefined, options);
+    };
+
+    const getIconForValue = (value, type) => {
+        if (type === "precipitation") {
+            if (value > 50) return <FaCloudRain className="text-center m-auto"/>; // heavy rain
+            if (value > 20) return <FaTint className="text-center m-auto"/>; // moderate rain
+            if (value > 0) return <FaSnowflake className="text-center m-auto"/>; // light rain/snow
+            return <FaSun className="text-center m-auto"/>; // no precipitation
+        } else if (type === "temperature") {
+            if (value > 30) return <FaThermometerHalf className="text-center m-auto"/>; // hot
+            if (value > 20) return <FaSun className="text-center m-auto"/>; // warm
+            if (value > 10) return <FaCloudRain className="text-center m-auto"/>; // cool
+            return <FaSnowflake className="text-center m-auto"/>; // cold
+        } else if (type === "humidity") {
+            if (value > 80) return <FaTint className="text-center m-auto"/>; // high humidity
+            if (value > 50) return <FaCloudRain className="text-center m-auto"/>; // moderate humidity
+            return <FaSun className="text-center m-auto"/>; // low humidity
+        }
     };
 
     useEffect(() => {
@@ -70,12 +96,12 @@ const StationWeatherDataTable = ({
         setTimeCheckpoint(groupedData);
     }, [selectedStation]);
 
-    const renderTableRow = (mainData, activeTab, dataLabel, label) => {
+    const renderTableRow = (mainData, activeTab, dataLabel, label, type) => {
         const stationData = mainData.flatMap((index) => index[dataLabel]);
-        // console.log(stationData)
+
         return (
             <>
-                <tr className="text-bold text-center flex-row items-center">
+                <tr className="text-bold text-center flex-row items-center justify-center">
                     <td className="font-bold text-base pr-3 pb-2">{label}</td>
                     {stationData.length > 0 ? (
                         stationData.map((tableData, index) => (
@@ -85,7 +111,7 @@ const StationWeatherDataTable = ({
                                     index === 0 ? "border-l" : ""
                                 } border-r border-black rounded-md px-2`}
                             >
-                                {tableData.toString()}
+                                {getIconForValue(tableData, type)}
                             </td>
                         ))
                     ) : (
@@ -97,8 +123,6 @@ const StationWeatherDataTable = ({
             </>
         );
     };
-
-    // console.log(timeCheckpoint);
 
     return (
         <>
@@ -112,7 +136,7 @@ const StationWeatherDataTable = ({
                                     key={i}
                                     colSpan={date.dateCount}
                                     className={`${
-                                        i == 0 && "border-l"
+                                        i === 0 && "border-l"
                                     } border-r border-black rounded-md`}
                                 >
                                     {formatDate(date.date)}
@@ -125,49 +149,56 @@ const StationWeatherDataTable = ({
                             timeCheckpoint,
                             activeTab,
                             "timeList",
-                            "Hour"
+                            "Hour",
+                            "time"
                         )}
                         {activeTab == 1 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "precipitationNwpList",
-                                "Precipitation Nwp"
+                                "Precipitation Nwp",
+                                "precipitation"
                             )}
                         {activeTab == 1 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "precipitationMosList",
-                                "Precipitation Mos"
+                                "Precipitation Mos",
+                                "precipitation"
                             )}
                         {activeTab == 2 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "relativeHumidityNwpList",
-                                "Relative Humidity Nwp"
+                                "Relative Humidity Nwp",
+                                "humidity"
                             )}
                         {activeTab == 2 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "relativeHumidityMosList",
-                                "Relative Humidity Mos"
+                                "Relative Humidity Mos",
+                                "humidity"
                             )}
                         {activeTab == 3 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "temperatureNwpList",
-                                "Temperature Nwp"
+                                "Temperature Nwp",
+                                "temperature"
                             )}
                         {activeTab == 3 &&
                             renderTableRow(
                                 timeCheckpoint,
                                 activeTab,
                                 "temperatureMosList",
-                                "Temperature Mos"
+                                "Temperature Mos",
+                                "temperature"
                             )}
                     </tbody>
                 </table>

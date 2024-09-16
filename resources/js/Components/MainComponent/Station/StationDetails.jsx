@@ -8,6 +8,7 @@ import StationWeatherDataDetailedTable from "./StationWeatherDataDetailedTable";
 
 const StationDetails = ({
     setSelectedStation,
+    setSelectedMarker,
     selectedMarker,
     selectedStation,
     activeTab,
@@ -64,6 +65,11 @@ const StationDetails = ({
         );
     };
 
+    const handleCloseButton = () => {
+        setSelectedMarker(null);
+        setSelectedStation(null);
+    }
+
     return (
         <>
             <div className="flex flex-row justify-start items-start absolute left-0 bottom-0 z-[500] w-screen max-h-[30%] overflow-x-hidden">
@@ -73,7 +79,7 @@ const StationDetails = ({
                             <button
                                 className="absolute text-3xl font-extrabold top-1 right-1 p-2
                                 " // This is the button
-                                onClick={() => setSelectedStation(null)}
+                                onClick={handleCloseButton}
                             >
                                 <IoIosCloseCircle />
                             </button>
@@ -105,8 +111,8 @@ const StationDetails = ({
             <div
                 className={`${
                     selectedStation
-                        ? "absolute w-[50%] opacity-100 scale-100 h-full"
-                        : "opacity-0 scale-95 pointer-events-none w-0 h-0 overflow-hidden"
+                        ? "absolute w-[50%] opacity-100 h-0"
+                        : "opacity-0 pointer-events-none w-0 h-0 overflow-hidden"
                 } flex justify-start items-start top-0 right-0 z-[600] transition-all duration-1000 ease-out bg-transparent`}
             >
                 <div className="flex flex-row justify-start items-start w-full bg-transparent">
@@ -116,7 +122,7 @@ const StationDetails = ({
 
                     <button
                         className="absolute text-3xl font-extrabold top-1 right-1 p-2 text-white"
-                        onClick={() => setSelectedStation(null)}
+                        onClick={handleCloseButton}
                     >
                         <IoIosCloseCircle />
                     </button>

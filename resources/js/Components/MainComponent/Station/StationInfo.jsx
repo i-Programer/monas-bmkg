@@ -4,10 +4,10 @@ import ReactDOMServer from "react-dom/server";
 import { FaCircle } from "react-icons/fa";
 import { RadarAnimation } from "@/Components";
 
-const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedMarker, markerId }) => {
+const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedMarker, markerId, color}) => {
     const customIcon =  L.divIcon({
         html: ReactDOMServer.renderToString(
-            <FaCircle style={{ color: "white", fontSize: "12px" }} />
+            <FaCircle style={{ color: color, fontSize: "12px" }} />
         ),
         className: "", // You can add custom CSS classes here
         iconSize: [1, 1], // Set the size of your icon [width, height]
@@ -93,7 +93,7 @@ const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedM
                             </span>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full">
+                            {/* <table className="min-w-full">
                                 <thead>
                                     <tr>
                                         <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
@@ -152,7 +152,7 @@ const StationInfo = ({ station, setSelectedStation, setSelectedMarker, selectedM
                                         </td>
                                     </tr>
                                 </tbody>
-                            </table>
+                            </table> */}
                         </div>
                     </div>
                 </Tooltip>
