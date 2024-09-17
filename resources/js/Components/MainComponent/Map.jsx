@@ -151,7 +151,7 @@ const Map = ({ stadiamaps_api }) => {
         return null;
     };
 
-    console.log(zoomLevel);
+    // console.log(zoomLevel);
     return (
         <>
             {loading && (
@@ -277,6 +277,9 @@ const Map = ({ stadiamaps_api }) => {
                         selectedInterpolatedColor = interpolatedColorT;
                     }
 
+                    // console.log(interpolatedColorPrecip)
+                    // console.log(interpolatedColorRH)
+                    // console.log(interpolatedColorT)
                     return (
                         <StationInfo
                             station={station}

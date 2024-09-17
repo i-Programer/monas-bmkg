@@ -74,7 +74,7 @@ class WeatherDataController extends Controller
 
     public function importDetailedData()
     {
-        $baseCacheKey = 'station_data_array';
+        $baseCacheKey = 'station_detailed_data_array';
         $chunkSize = 200; // Increase chunk size for fewer cache operations
         $stationData_array = [];
         $chunkIndex = 0;
