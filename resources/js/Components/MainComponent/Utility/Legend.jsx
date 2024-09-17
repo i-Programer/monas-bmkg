@@ -19,13 +19,19 @@ const Legend = ({ min, max, mean, activeTab }) => {
         }
     };
 
-    // Calculate the mean position for the mean indicator
-    const meanPosition = `${((mean - min) / (max - min)) * 100}%`;
+    // Handle invalid (Infinity, -Infinity, NaN) or null values for min, max, and mean
+    const safeMin = isFinite(min) && min !== null ? min : 0;
+    const safeMax = isFinite(max) && max !== null ? max : 0;
+    const safeMean = isFinite(mean) && mean !== null ? mean : 0;
+
+    // Avoid division by zero when calculating the mean position
+    const meanPosition =
+        safeMax !== safeMin ? `${((safeMean - safeMin) / (safeMax - safeMin)) * 100}%` : "50%";
 
     return (
         <div className="flex flex-col items-center absolute z-[590] mt-[17rem] ml-4">
             <div className="mb-2 text-white font-bold text-base">
-                Max: {max}
+                Max: {safeMax}
             </div>
             <div
                 className="relative w-5 h-48 border border-white rounded-md"
@@ -38,7 +44,7 @@ const Legend = ({ min, max, mean, activeTab }) => {
                 />
             </div>
             <div className="mt-2 text-white font-bold text-base">
-                Min: {min}
+                Min: {safeMin}
             </div>
         </div>
     );

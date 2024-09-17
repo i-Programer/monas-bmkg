@@ -15,6 +15,7 @@ import windData from "@/data/windData";
 import { LayerMap, Legend, SearchBar } from "..";
 import StationInfo from "./Station/StationInfo";
 import StationDetails from "./Station/StationDetails";
+import axios from "axios"; // Import axios
 
 const Map = ({ stadiamaps_api }) => {
     // Define bounds for Indonesia (approximate)
@@ -24,15 +25,12 @@ const Map = ({ stadiamaps_api }) => {
     ];
     const [station_data, setStation_data] = useState([]);
     const [station_status, setStation_status] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true); // Initially set to true
     const [color, setColor] = useState("red");
     const [selectedStation, setSelectedStation] = useState(null);
     const [selectedMarker, setSelectedMarker] = useState(null);
-
-    const [minValue, setMinValue] = useState(0);
-    const [maxValue, setMaxValue] = useState(100);
-
     const [activeTab, setActiveTab] = useState(1);
+    const [zoomLevel, setZoomLevel] = useState(5);
 
     const calculateStats = (values) => {
         const min = Math.min(...values);
@@ -42,7 +40,6 @@ const Map = ({ stadiamaps_api }) => {
         return { min, max, mean };
     };
 
-    // Step 1: Extract and combine all values from all stations
     const allTValues = station_data
         .map((station) => station.status.map((s) => [s.t_nwp, s.t_mos]))
         .flat(2); // Flatten the nested arrays into one array of temperature values
@@ -55,14 +52,9 @@ const Map = ({ stadiamaps_api }) => {
         .map((station) => station.status.map((s) => [s.prec_nwp, s.prec_mos]))
         .flat(2); // Flatten the nested arrays into one array of precipitation values
 
-    // Step 2: Calculate global min, max, and mean for temperature, humidity, and precipitation
     const globalTStats = calculateStats(allTValues);
     const globalRHStats = calculateStats(allRHValues);
     const globalPrecStats = calculateStats(allPrecValues);
-
-    console.log("Global Temperature Stats:", globalTStats);
-    console.log("Global Humidity Stats:", globalRHStats);
-    console.log("Global Precipitation Stats:", globalPrecStats);
 
     let selectedStats;
     if (activeTab === 3) {
@@ -74,6 +66,7 @@ const Map = ({ stadiamaps_api }) => {
     }
 
     useEffect(() => {
+        setLoading(true); // Set loading to true when fetching data
         axios
             .get("/api/import-detailed-data")
             .then((response) => {
@@ -83,11 +76,11 @@ const Map = ({ stadiamaps_api }) => {
                 // Extract statuses from the stations data
                 const extractedStatuses = data.map((station) => station.status);
                 setStation_status(extractedStatuses);
-                setLoading(false);
+                setLoading(false); // Set loading to false when data is fetched
             })
             .catch((error) => {
                 console.error("Error fetching data:", error);
-                setLoading(false);
+                setLoading(false); // Set loading to false even if there's an error
             });
     }, []);
 
@@ -105,7 +98,6 @@ const Map = ({ stadiamaps_api }) => {
         return {
             fillColor: color, // Example based on data
             weight: 1, // Thinner border (default is 2)
-            // opacity: 1,
             fillOpacity: 0.5,
             color: "white", // Border color
             dashArray: "3",
@@ -143,18 +135,37 @@ const Map = ({ stadiamaps_api }) => {
             };
         }, [map]);
 
+        // Detect zoom level changes
+        useEffect(() => {
+            const onZoomEnd = () => {
+                setZoomLevel(map.getZoom()); // Update zoom level state
+            };
+
+            map.on("zoomend", onZoomEnd); // Listen to zoom events
+
+            return () => {
+                map.off("zoomend", onZoomEnd); // Clean up listener on component unmount
+            };
+        }, [map]);
+
         return null;
     };
 
+    console.log(zoomLevel);
     return (
         <>
-            {/* <div className="flex flex-row justify-between items-stretch"> */}
-            {/* <SearchBar /> */}
+            {loading && (
+                <div className="loading-overlay">
+                    <div className="loading-spinner"></div>
+                </div>
+            )}
+
             <LayerMap
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 selectedStation={selectedStation}
             />
+
             <MapContainer
                 center={[-2.5, 118]} // Center the map on Indonesia
                 zoom={5} // Set an initial zoom level
@@ -162,8 +173,6 @@ const Map = ({ stadiamaps_api }) => {
                 minZoom={4} // Set a minimum zoom level
                 scrollWheelZoom={true} // Enable scroll wheel zoom
                 style={{ height: "100vh", width: "100%" }} // Full-screen map
-                // maxBounds={indonesiaBounds} // Restrict the map to Indonesia bounds
-                // maxBoundsViscosity={1.0} // Prevent dragging outside the bounds
                 zoomControl={false}
             >
                 <GeoJSON data={choroplethData} style={geoJsonStyle} />
@@ -173,7 +182,7 @@ const Map = ({ stadiamaps_api }) => {
                     url={`https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${stadiamaps_api}`}
                 />
 
-                {station_data.map((station, i) => {
+                {zoomLevel >= 5 && station_data.map((station, i) => {
                     // Step 3: Interpolate color based on mean temperature (or any other value)
                     const interpolateColor = (value, min, max) => {
                         // Normalize the value between 0 and 1
@@ -271,7 +280,7 @@ const Map = ({ stadiamaps_api }) => {
                     return (
                         <StationInfo
                             station={station}
-                            color={selectedInterpolatedColor} // Pass the interpolated color as a prop
+                            color={selectedInterpolatedColor} // Example color, replace with your logic
                             selectedStation={selectedStation}
                             selectedMarker={selectedMarker}
                             setSelectedStation={setSelectedStation}
@@ -282,8 +291,6 @@ const Map = ({ stadiamaps_api }) => {
                     );
                 })}
 
-                {/* You can add markers or other features here */}
-
                 <Legend
                     min={selectedStats.min}
                     max={selectedStats.max}
@@ -291,12 +298,12 @@ const Map = ({ stadiamaps_api }) => {
                     activeTab={activeTab}
                 />
             </MapContainer>
+
             <StationDetails
                 setSelectedStation={setSelectedStation}
                 selectedStation={selectedStation}
                 activeTab={activeTab}
             />
-            {/* </div> */}
         </>
     );
 };

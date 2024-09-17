@@ -87,3 +87,49 @@ body{
   margin-right: 100px !important;
   background-color: black !important;
 }
+
+/* Light Loading Spinner */
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1); /* Light gray border */
+  border-top: 4px solid #3498db; /* Light blue */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: loadingSpin 1s linear infinite; /* Smoother, faster rotation */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000; /* Ensure it appears above map */
+}
+
+@keyframes loadingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Light Overlay for better UX */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6); /* Light, semi-transparent background */
+  z-index: 999; /* Ensure it's behind the spinner but above other content */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Optional text for Loading */
+.loading-text {
+  color: #3498db; /* Light blue color matching spinner */
+  font-size: 1rem;
+  margin-top: 10px;
+  text-align: center;
+}
