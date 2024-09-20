@@ -73,7 +73,7 @@ const StationDetails = ({
     return (
         <>
             <div className="flex flex-row justify-start items-start absolute left-0 bottom-0 z-[500] w-screen max-h-[30%] overflow-x-hidden">
-                <div className="flex flex-row justify-center items-center p-4 bg-slate-500/20 w-full h-100% relativet text-white">
+                <div className="flex flex-row justify-center items-center p-4 bg-slate-500/40 w-full h-100% relativet text-white">
                     {selectedStation ? (
                         <>
                             <button

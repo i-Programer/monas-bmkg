@@ -121,7 +121,7 @@ const StationsWeatherDataGraph = ({
                     <ResponsiveContainer
                         width="100%"
                         height={300}
-                        className={"text bg-slate-500/20 pt-4 rounded-bl-md"}
+                        className={"text bg-slate-500/40 pt-4 rounded-bl-md"}
                     >
                         <LineChart
                             data={createChartData(nwp, mos, date, time)}
